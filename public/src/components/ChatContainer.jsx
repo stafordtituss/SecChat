@@ -18,7 +18,24 @@ export default function ChatContainer({currentChat, currentUser, socket}) {
                     from: currentUser._id,
                     to: currentChat._id,
                 });
-                setMessages(response.data);
+                var encKey = '';
+                for(var i in currentUser.sharedSec){
+                    if(currentUser.sharedSec[i].name === currentChat.username) {
+                        console.log(currentUser.sharedSec[i].secKey);
+                        encKey = currentUser.sharedSec[i].secKey;
+                    }
+                }
+                console.log(response.data)
+                var final = new Array;
+                for(i in response.data) {
+                    var decryptedMsg = CryptoJS.AES.decrypt(response.data[i].message, encKey);
+                    decryptedMsg = decryptedMsg.toString(CryptoJS.enc.Utf8);
+                    var state = response.data[i].fromSelf;
+                    var obj = {fromSelf: state, message: decryptedMsg}
+                    final.push(obj);
+                }
+                console.log(final);
+                setMessages(final);
             }
             fetchData().catch(console.error);
         }
@@ -56,7 +73,7 @@ export default function ChatContainer({currentChat, currentUser, socket}) {
             socket.current.on('msg-receive', (msg) => {
                 var encKey = '';
                 for(var i in currentUser.sharedSec){
-                    if(currentUser.sharedSec[i].name == currentChat.username) {
+                    if(currentUser.sharedSec[i].name === currentChat.username) {
                         console.log(currentUser.sharedSec[i].secKey);
                         encKey = currentUser.sharedSec[i].secKey;
                     }
